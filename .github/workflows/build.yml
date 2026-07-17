@@ -18,20 +18,23 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
+          cd template
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Setup
         run: |
+          cd template
           python -m invoke setup
 
       - name: Build
         run: |
+          cd template
           python -m invoke build-windows
 
       - name: Run offline binaries
         run: |
-          cd out\bin
+          cd template\out\bin
           .\SourceOfflineDemo.exe
           .\ProcessorOfflineDemo.exe
           .\SinkOfflineDemo.exe
@@ -53,20 +56,23 @@ jobs:
 
       - name: Install Python dependencies
         run: |
+          cd template
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Setup
         run: |
+          cd template
           python -m invoke setup
 
       - name: Build
         run: |
+          cd template
           python -m invoke build-macos
 
       - name: Run offline binaries
         run: |
-          cd out/bin
+          cd template/out/bin
           ./SourceOfflineDemo
           ./ProcessorOfflineDemo
           ./SinkOfflineDemo
@@ -83,14 +89,14 @@ jobs:
         run: |
           docker build \
             -t sb-devcontainer \
-            -f .devcontainer/Dockerfile \
+            -f template/.devcontainer/Dockerfile \
             .
 
       - name: Setup inside container
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
+            -w /workspace/template \
             sb-devcontainer \
             inv setup
 
@@ -98,7 +104,7 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
+            -w /workspace/template \
             sb-devcontainer \
             inv build-linux
 
@@ -106,16 +112,16 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
-            -w /workspace/out/bin \
+            -w /workspace/template/out/bin \
             sb-devcontainer \
             ./SourceOfflineDemo
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
-            -w /workspace/out/bin \
+            -w /workspace/template/out/bin \
             sb-devcontainer \
             ./ProcessorOfflineDemo
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
-            -w /workspace/out/bin \
+            -w /workspace/template/out/bin \
             sb-devcontainer \
             ./SinkOfflineDemo

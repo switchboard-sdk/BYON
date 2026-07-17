@@ -1,80 +1,85 @@
 #!/bin/bash
+set -euo pipefail
 
-PROJECT_DIR="$(git rev-parse --show-toplevel)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+TEMPLATE_DIR="$REPO_ROOT/template"
 
 replace_string_in_directory() {
     local directory="$1"
     local search_string="$2"
     local replace_string="$3"
+    local file
 
-    # Check if directory exists
-    if [ ! -d "$directory" ]; then
-        echo "Directory '$directory' does not exist."
-        return 1
-    fi
-
-    # Find files containing the search string and replace it
-    find "$directory" -type f -exec grep -l "$search_string" {} + | while IFS= read -r file; do
+    # Process substitution (not a pipe) so a zero-match grep doesn't trip
+    # "set -o pipefail" and silently abort the script under "set -e".
+    while IFS= read -r file; do
         echo "Processing file: $file"
-        sed -i '' "s/$search_string/$replace_string/g" "$file"
-    done
-
-    echo "Replacement complete."
+        sed -i.bak "s#$search_string#$replace_string#g" "$file"
+        rm -f "$file.bak"
+    done < <(grep -rlF --binary-files=without-match -- "$search_string" "$directory" || true)
 }
 
-rename_files_with_string() {
+rename_paths_with_string() {
     local directory="$1"
     local search_string="$2"
     local replace_string="$3"
 
-    # Check if directory exists
-    if [ ! -d "$directory" ]; then
-        echo "Directory '$directory' does not exist."
-        return 1
-    fi
-
-    # Find files containing the search string and rename them
-    find "$directory" -type f -name "*$search_string*" | while IFS= read -r file; do
-        new_name="${file//$search_string/$replace_string}"
-        echo "Renaming file: $file to $new_name"
-        mv "$file" "$new_name"
+    # -depth: rename children before their parent directory, so a renamed
+    # parent doesn't invalidate the path of a not-yet-processed child.
+    find "$directory" -depth -name "*$search_string*" | while IFS= read -r path; do
+        new_path="${path//$search_string/$replace_string}"
+        echo "Renaming: $path -> $new_path"
+        mv "$path" "$new_path"
     done
-
-    echo "File renaming complete."
 }
 
-echo "Enter the new project name:"
-read NEW_PROJECT_NAME
+NEW_PROJECT_NAME="${1:-}"
+if [ -z "$NEW_PROJECT_NAME" ]; then
+    read -r -p "Enter the new project name: " NEW_PROJECT_NAME
+fi
 
-echo "You entered: $NEW_PROJECT_NAME"
+if [ -z "$NEW_PROJECT_NAME" ]; then
+    echo "Project name cannot be empty."
+    exit 1
+fi
 
-echo "Project name with default case: ${NEW_PROJECT_NAME}"
+DEST_DIR="${2:-$(dirname "$REPO_ROOT")/$NEW_PROJECT_NAME}"
 
 NEW_PROJECT_NAME_LOWERCASE=$(echo "$NEW_PROJECT_NAME" | tr '[:upper:]' '[:lower:]')
-echo "Project name with lowercase: ${NEW_PROJECT_NAME_LOWERCASE}"
-
 NEW_PROJECT_NAME_UPPERCASE=$(echo "$NEW_PROJECT_NAME" | tr '[:lower:]' '[:upper:]')
-echo "Project name with uppercase: ${NEW_PROJECT_NAME_UPPERCASE}"
 
-read -p "Are you sure you want to continue? (y/n): " choice
-case "$choice" in 
-  y|Y ) 
-    echo "You entered: $project_name"
-    ;;
-  n|N ) 
-    echo "Operation aborted."
-    exit 1
-    ;;
-  * ) 
-    echo "Invalid choice. Operation aborted."
-    exit 1
-    ;;
+echo "New project name: $NEW_PROJECT_NAME"
+echo "  lowercase:       $NEW_PROJECT_NAME_LOWERCASE"
+echo "  uppercase:       $NEW_PROJECT_NAME_UPPERCASE"
+echo "Destination:       $DEST_DIR"
+
+read -r -p "Are you sure you want to continue? (y/n): " choice
+case "$choice" in
+    y|Y ) ;;
+    * ) echo "Operation aborted."; exit 1 ;;
 esac
 
-replace_string_in_directory "$PROJECT_DIR" "ExampleDSP" "$NEW_PROJECT_NAME"
-replace_string_in_directory "$PROJECT_DIR" "EXAMPLEDSP" "$NEW_PROJECT_NAME_UPPERCASE"
-replace_string_in_directory "$PROJECT_DIR" "exampledsp" "$NEW_PROJECT_NAME_LOWERCASE"
+if [ -e "$DEST_DIR" ]; then
+    echo "Destination '$DEST_DIR' already exists. Aborting."
+    exit 1
+fi
 
-rename_files_with_string "$PROJECT_DIR" "ExampleDSP" "$NEW_PROJECT_NAME"
-rename_files_with_string "$PROJECT_DIR" "EXAMPLEDSP" "$NEW_PROJECT_NAME_UPPERCASE"
-rename_files_with_string "$PROJECT_DIR" "exampledsp" "$NEW_PROJECT_NAME_LOWERCASE"
+mkdir -p "$DEST_DIR"
+cp -R "$TEMPLATE_DIR/." "$DEST_DIR/"
+
+replace_string_in_directory "$DEST_DIR" "ExampleDSP" "$NEW_PROJECT_NAME"
+replace_string_in_directory "$DEST_DIR" "EXAMPLEDSP" "$NEW_PROJECT_NAME_UPPERCASE"
+replace_string_in_directory "$DEST_DIR" "exampledsp" "$NEW_PROJECT_NAME_LOWERCASE"
+
+rename_paths_with_string "$DEST_DIR" "ExampleDSP" "$NEW_PROJECT_NAME"
+rename_paths_with_string "$DEST_DIR" "EXAMPLEDSP" "$NEW_PROJECT_NAME_UPPERCASE"
+rename_paths_with_string "$DEST_DIR" "exampledsp" "$NEW_PROJECT_NAME_LOWERCASE"
+
+git init -q "$DEST_DIR"
+git -C "$DEST_DIR" add -A
+if ! git -C "$DEST_DIR" commit -q -m "Initial commit"; then
+    echo "Warning: could not create the initial commit (configure 'git config user.name/user.email'). Commit manually when ready."
+fi
+
+echo "Done. New project created at: $DEST_DIR"
