@@ -1,0 +1,38 @@
+{
+    "type": "Offline",
+    "config": {
+        "inputFiles": [
+            {
+                "filePath": "input.wav",
+                "numberOfChannels": 1
+            }
+        ],
+        "outputFiles": [
+            {
+                "filePath": "output.wav",
+                "numberOfChannels": 1
+            }
+        ],
+        "graph": {
+            "nodes": [
+                {
+                    "id": "processorNode",
+                    "type": "ExampleDSP.ExampleProcessor",
+                    "config": {
+                        "gain": 0.2
+                    }
+                }
+            ],
+            "connections": [
+                {
+                    "sourceNode": "inputNode",
+                    "destinationNode": "processorNode"
+                },
+                {
+                    "sourceNode": "processorNode",
+                    "destinationNode": "outputNode"
+                }
+            ]
+        }
+    }
+}

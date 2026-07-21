@@ -1,0 +1,27 @@
+{
+    "type": "Realtime",
+    "config": {
+        "microphoneEnabled": true,
+        "graph": {
+            "nodes": [
+                {
+                    "id": "processorNode",
+                    "type": "ExampleDSP.ExampleProcessor",
+                    "config": {
+                        "gain": 0.2
+                    }
+                }
+            ],
+            "connections": [
+                {
+                    "sourceNode": "inputNode",
+                    "destinationNode": "processorNode"
+                },
+                {
+                    "sourceNode": "processorNode",
+                    "destinationNode": "outputNode"
+                }
+            ]
+        }
+    }
+}

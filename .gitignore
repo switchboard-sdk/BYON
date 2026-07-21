@@ -1,0 +1,10 @@
+# Build artifacts
+build/
+out/
+.cxx/
+
+# IDE / OS
+*.xcodeproj
+.idea/
+.vscode/
+.DS_Store

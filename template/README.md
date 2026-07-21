@@ -32,26 +32,90 @@ This repository includes three example node implementations to demonstrate the a
 | `ExampleProcessor` | `src/all/Nodes/ExampleProcessor/ExampleProcessorNode.cpp` | Applies a gain adjustment to the input signal.                    |
 | `ExampleSink`      | `src/all/Nodes/ExampleSink/ExampleSinkNode.cpp`           | Measures peak input levels and emits events at defined intervals. |
 
-Each node includes two demo projects located in the `demos/` directory:
+Each node ships **offline** and **real-time** demos in the `demos/` directory:
 
-- **Real-time demo**: Uses `RealtimeGraphRenderer` to process audio from the system mic and play it through the speakers.
-- **Offline demo**: Uses `OfflineGraphRenderer` to process audio files and generate output files.
+- **Offline** demos use `OfflineGraphRenderer` to process an audio file and write an output file.
+- **Real-time** demos use `RealtimeGraphRenderer` to process the system microphone and play it through the speakers.
 
-We recommend running these demos to familiarize yourself with how nodes integrate into the SDK.
+Running them is the quickest way to see the extension working and to learn how nodes integrate into the SDK.
 
 ---
 
-## 🏗 Building the Extension
+## 🏗 Building & Running the Demos
 
-Use the platform-specific `build` command to compile the extension:
-
-For example, on Linux:
+Build the extension and its demos with the platform-specific task (see `tasks.py` for the full list):
 
 ```bash
-inv build-linux
+inv build-linux      # or: inv build-macos / inv build-windows
 ```
 
-Additional build commands are available for other platforms. Refer to `tasks.py` for the full list.
+This compiles everything and installs the runnable demos — each alongside its graph JSON (and an `input.wav` for the offline demos) — into `out/bin/`. Run any demo from there:
+
+```bash
+cd out/bin
+./ProcessorOfflineDemo     # applies gain to input.wav, writes output.wav
+./ProcessorRealtimeDemo    # applies gain to the mic, plays to the speakers (press a key to stop)
+```
+
+| Demo binary | Node | What it does |
+| --- | --- | --- |
+| `SourceOfflineDemo` / `SourceRealtimeDemo` | `ExampleSource` | Generates a sine wave |
+| `ProcessorOfflineDemo` / `ProcessorRealtimeDemo` | `ExampleProcessor` | Applies a gain adjustment |
+| `SinkOfflineDemo` / `SinkRealtimeDemo` | `ExampleSink` | Measures peak input levels and emits events |
+
+Offline demos operate on audio files in the current directory (the source/processor demos write an `output.wav`; the sink demo prints peak levels); real-time demos use the system microphone and speakers.
+
+---
+
+## 🔌 Dynamic Loading
+
+The demos above link the extension at **compile time**. The same extension can also be built as
+a shared library (`.so` / `.dylib`) and loaded **dynamically** at runtime. All this takes is one
+exported C entry point:
+
+```cpp
+// ExampleDSPExtension.hpp
+#if !defined(SWITCHBOARD_WEB)
+extern "C" {
+    void sb_extension_load();
+}
+#endif
+
+// ExampleDSPExtension.cpp
+extern "C" void sb_extension_load() {
+    switchboard::extensions::exampledsp::ExampleDSPExtension::load();
+}
+```
+
+The SDK's `ExtensionLoader` resolves `sb_extension_load` via `dlsym`. Its **only** job is to
+**register** the extension with the `ExtensionManager` — exactly what a statically-linked
+extension's `load()` does. It takes **no arguments**; nothing else is required to make an
+extension dynamically loadable.
+
+> Dynamic loading is supported on **macOS and desktop Linux** (matching the SDK's
+> `ExtensionLoader`). The `processor-dynamic` demo below is built on those platforms only.
+
+### Testing dynamic loading with the SDK
+
+`ProcessorDynamicDemo` is the dynamic-loading counterpart of the `ProcessorOfflineDemo` /
+`ProcessorRealtimeDemo` above — same `ExampleProcessor` graph, but it's the one demo that loads
+the extension at **runtime** instead of linking it. It `dlopen`s the built `.so`, calls
+`sb_extension_load`, then runs the graph offline or realtime.
+
+After building (per the section above), verify the symbol and run it:
+
+```bash
+# Confirm the entry point is exported from the built library
+nm -D build/libSwitchboardExampleDSP.so | grep sb_extension_load
+
+# Run it — it loads the .so dynamically rather than linking it
+cd out/bin
+./ProcessorDynamicDemo offline    # applies gain to input.wav, writes output.wav
+./ProcessorDynamicDemo realtime   # applies gain to the mic, plays to the speakers (press a key to stop)
+```
+
+The demo defaults to `./libSwitchboardExampleDSP.so` (installed next to it); pass a different
+path as the second argument if your library lives elsewhere.
 
 ---
 

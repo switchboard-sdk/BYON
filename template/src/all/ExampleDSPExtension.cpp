@@ -1,8 +1,13 @@
 #include "ExampleDSPExtension.hpp"
 
-#include <switchboard_core/Logger.hpp>
 #include <switchboard_core/ExtensionManager.hpp>
 #include "ExampleDSPNodeFactory.hpp"
+
+#if !defined(SWITCHBOARD_WEB)
+extern "C" void sb_extension_load() {
+    switchboard::extensions::exampledsp::ExampleDSPExtension::load();
+}
+#endif
 
 namespace switchboard::extensions::exampledsp {
 
