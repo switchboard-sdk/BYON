@@ -8,7 +8,7 @@ namespace switchboard::extensions::exampledsp {
 class ExampleSourceNode : public SingleBusAudioSourceNode {
 public:
     static NodeTypeInfo getNodeTypeInfo() {
-        return NodeTypeInfo { SWITCHBOARD_NODE_NAMESPACE,
+        return NodeTypeInfo { "ExampleDSP",
                               "ExampleSource",
                               "ExampleSource",
                               "Example source node.",
