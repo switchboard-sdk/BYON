@@ -8,7 +8,7 @@ namespace switchboard::extensions::exampledsp {
 class ExampleSinkNode : public SingleBusAudioSinkNode {
 public:
     static NodeTypeInfo getNodeTypeInfo() {
-        return NodeTypeInfo { SWITCHBOARD_NODE_NAMESPACE,
+        return NodeTypeInfo { "ExampleDSP",
                               "ExampleSink",
                               "ExampleSink",
                               "Example sink node.",
