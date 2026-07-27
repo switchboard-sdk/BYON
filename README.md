@@ -1,8 +1,12 @@
-# Switchboard SDK – C++ Extension Template
+# BYON – Switchboard SDK Extension Factory
 
-[![Build](https://github.com/switchboard-sdk/cpp-extension-template/actions/workflows/build.yml/badge.svg)](https://github.com/switchboard-sdk/cpp-extension-template/actions/workflows/build.yml)
+[![Build](https://github.com/switchboard-sdk/BYON/actions/workflows/build.yml/badge.svg)](https://github.com/switchboard-sdk/BYON/actions/workflows/build.yml)
 
-This repository is a template for building custom C++ extensions for the Switchboard SDK. The actual project template lives in [`template/`](./template) — it's example code named `ExampleDSP` that demonstrates the extension architecture (source/processor/sink nodes, demos, CMake setup, etc.).
+BYON ("Bring Your Own Node") is an extension **factory** for the Switchboard SDK: it generates a new, independently-named C++ extension project that you then own and develop. It isn't a template you edit in place — you run the generator and it stamps out your project.
+
+What gets stamped out lives in [`template/`](./template) — example code named `ExampleDSP` that demonstrates the extension architecture (source/processor/sink nodes, demos, CMake setup, etc.).
+
+For the concepts behind custom nodes and extensions, see the [Bring Your Own Node](https://docs.switchboard.audio/guide/bring-your-own-node/overview/) guide.
 
 ## 🚀 Generating Your Project
 
