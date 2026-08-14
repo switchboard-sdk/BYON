@@ -4,7 +4,7 @@
 set(SwitchboardSDK_FOUND FALSE)
 
 if(NOT DEFINED SWITCHBOARD_PACKAGE_VERSION)
-    set(SWITCHBOARD_PACKAGE_VERSION "3.2.4") # Default version
+    set(SWITCHBOARD_PACKAGE_VERSION "3.2.5") # Default version
 endif()
 
 # Detect platform (adjust as needed)
@@ -70,11 +70,12 @@ function(find_switchboard_package PACKAGE_NAME PACKAGE_VERSION)
         return()
     endif ()
 
-    set(SWITCHBOARD_PACKAGE_URL "https://switchboard-sdk-public.s3.amazonaws.com/builds/release/${PACKAGE_VERSION}/${SwitchboardSDK_PLATFORM}/${PACKAGE_NAME}.zip")
+    # Public zips are named <package>-<platform>-<version>.
+    set(SWITCHBOARD_PACKAGE_FILE_NAME "${PACKAGE_NAME}-${SwitchboardSDK_PLATFORM}-${PACKAGE_VERSION}")
+    set(SWITCHBOARD_PACKAGE_URL "https://switchboard-sdk-public.s3.amazonaws.com/builds/release/${PACKAGE_VERSION}/${SwitchboardSDK_PLATFORM}/${SWITCHBOARD_PACKAGE_FILE_NAME}.zip")
     set(SWITCHBOARD_PACKAGE_DIR "${SwitchboardSDK_DIR}/libs/${PACKAGE_NAME}/${SwitchboardSDK_PLATFORM}/${PACKAGE_VERSION}")
 
     # Download and extract the package
-    set(SWITCHBOARD_PACKAGE_FILE_NAME "${PACKAGE_NAME}-${SwitchboardSDK_PLATFORM}-${PACKAGE_VERSION}")
     download_and_extract(${SWITCHBOARD_PACKAGE_URL} ${SWITCHBOARD_PACKAGE_FILE_NAME} ${SWITCHBOARD_PACKAGE_DIR})
 
     # Define package as an INTERFACE library
