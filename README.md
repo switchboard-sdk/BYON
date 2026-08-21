@@ -24,4 +24,4 @@ scripts/rename.sh MyExtensionName [/optional/destination/path]
 
 This copies `template/` into a new project directory (a sibling directory named after your project by default), renames all `ExampleDSP`/`EXAMPLEDSP`/`exampledsp` references and file names within the copy, and initializes it with its own fresh git history. The original `template/` directory here is left untouched, so you can run this as many times as you like.
 
-See [`template/README.md`](./template/README.md) for what's inside the generated project and how to build it.
+See [`template/README.md`](./template/README.md) for what's inside the generated project and how to build it. Once you have a project, that README also covers [adding your own nodes](./template/README.md#-adding-your-own-nodes), [configuring the extension at load time](./template/README.md#configuring-your-extension-at-load-time-configjson), and [shipping models and other assets](./template/README.md#-assets-models-binaries-audio).

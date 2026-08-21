@@ -1,5 +1,8 @@
 #pragma once
 
+#include <optional>
+#include <string>
+
 #include <switchboard_core/Extension.hpp>
 
 // C entry point resolved via dlsym when the extension is loaded dynamically.
@@ -19,9 +22,17 @@ public:
 
     // Overridden methods
 
+    Result<void> initialize(const SBAnyMap& config) override;
+
     std::string getName() override;
     std::string getDescription() override;
     std::shared_ptr<NodeFactory> getNodeFactory() override;
+
+    // Lets nodes fall back to a value from config.json when their own config omits the key.
+    static std::optional<std::string> getConfigValue(const std::string& key);
+
+private:
+    static SBAnyMap extensionConfig;
 };
 
 }
