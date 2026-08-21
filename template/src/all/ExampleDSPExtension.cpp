@@ -11,8 +11,24 @@ extern "C" void sb_extension_load() {
 
 namespace switchboard::extensions::exampledsp {
 
+SBAnyMap ExampleDSPExtension::extensionConfig;
+
 void ExampleDSPExtension::load() {
     ExtensionManager::getInstance().registerExtension(std::make_shared<ExampleDSPExtension>());
+}
+
+Result<void> ExampleDSPExtension::initialize(const SBAnyMap& config) {
+    // Only store the config here. Resolving an asset URI or opening a file this early fails:
+    // initialize runs while the host is still starting up. See the README.
+    extensionConfig = config;
+    return makeSuccess();
+}
+
+std::optional<std::string> ExampleDSPExtension::getConfigValue(const std::string& key) {
+    if (extensionConfig.hasKey(key)) {
+        return extensionConfig.get<std::string>(key);
+    }
+    return std::nullopt;
 }
 
 std::string ExampleDSPExtension::getName() {

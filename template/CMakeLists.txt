@@ -58,6 +58,24 @@ install(
     FRAMEWORK DESTINATION lib
 )
 
+# Deliverable dynamic-extension layout: the library plus its load-time config, together in
+# one directory. This is a second copy of the library on purpose — the one installed above
+# lands in lib/, where the demos that link it resolve it via RUNPATH $ORIGIN/../lib.
+if (CMAKE_SYSTEM_NAME MATCHES "iOS|Darwin|watchOS")
+    # The target is a framework here, so install(TARGETS) would demand a FRAMEWORK
+    # DESTINATION and stage a bundle instead of the flat library this layout wants.
+    install(FILES $<TARGET_FILE:SwitchboardExampleDSP> DESTINATION extensions)
+else ()
+    # install(TARGETS) rather than the library file, so CMake strips the build-tree RUNPATH
+    # from the installed copy — a handed-over artifact should carry no local paths.
+    install(
+        TARGETS "SwitchboardExampleDSP"
+        LIBRARY DESTINATION extensions  # .so
+        RUNTIME DESTINATION extensions  # .dll
+    )
+endif ()
+install(FILES config.json DESTINATION extensions)
+
 # Tests
 #add_catch_test_target(${TARGET_NAME})
 
